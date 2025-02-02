@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
 
 export default function SimulationInterface() {
   // Default values in case there is no saved scenario.
@@ -29,6 +30,12 @@ export default function SimulationInterface() {
 
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const dataChannel = useRef<RTCDataChannel | null>(null);
+
+  const router = useRouter();
+
+  const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
 
   // Read scenario settings from localStorage on mount.
   useEffect(() => {
@@ -80,7 +87,8 @@ export default function SimulationInterface() {
       // Create a data channel for sending/receiving messages
       dataChannel.current = peerConnection.current.createDataChannel("oai-events");
       dataChannel.current.onmessage = (event) => {
-        console.log("Received AI Event:", event.data);
+        const aiMessage = { role: "assistant", content: JSON.parse(event.data).text };
+        setMessages(prev => [...prev, aiMessage]);
       };
 
       // Start WebRTC session with OpenAI
@@ -127,6 +135,48 @@ export default function SimulationInterface() {
     }
     setIsCallActive(false);
     setStatus("Call ended.");
+  };
+
+  const handleEndCall = async () => {
+    try {
+      setStatus("Evaluating conversation...");
+      
+      // Get evaluation from API
+      const response = await fetch("/api/evaluate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to evaluate conversation");
+      }
+
+      const evaluation = await response.json();
+      
+      // Store feedback in localStorage
+      localStorage.setItem("lastCallFeedback", JSON.stringify(evaluation));
+      
+      // Save session duration
+      const duration = Date.now() - sessionStartTime;
+      localStorage.setItem("lastSessionDuration", duration.toString());
+      
+      // Save current scenario
+      const scenarioData = {
+        difficulty: callDifficulty,
+        emotion: customerEmotion,
+        product: "Demo Product", // Replace with actual product if available
+      };
+      localStorage.setItem("currentScenario", JSON.stringify(scenarioData));
+
+      await stopVoiceSession();
+      router.push("/feedback");
+    } catch (error) {
+      console.error("Error ending call:", error);
+      setStatus("Error evaluating conversation");
+    }
   };
 
   return (
@@ -188,12 +238,20 @@ export default function SimulationInterface() {
       <main className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
         <p>{status}</p>
         <Button
-          onClick={isCallActive ? stopVoiceSession : startVoiceSession}
+          onClick={isCallActive ? handleEndCall : startVoiceSession}
           className={`w-20 h-20 rounded-full ${
             isCallActive ? "bg-red-600" : "bg-green-600"
           } text-white shadow-lg`}
         >
           <Mic className="h-10 w-10" />
+        </Button>
+        <Button
+          onClick={handleEndCall}
+          variant="destructive"
+          className="mt-4"
+          disabled={!isCallActive || messages.length === 0}
+        >
+          End Call & Get Feedback
         </Button>
         <audio ref={audioEl} className="hidden" />
       </main>
