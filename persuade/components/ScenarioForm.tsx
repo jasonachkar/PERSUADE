@@ -1,21 +1,53 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
+import type { ScenarioOption } from "@/lib/kv"
 
 export default function ScenarioForm() {
   const [difficulty, setDifficulty] = useState("")
   const [emotion, setEmotion] = useState("")
   const [product, setProduct] = useState("")
+  const [options, setOptions] = useState<{
+    difficulties: ScenarioOption[]
+    emotions: ScenarioOption[]
+    products: ScenarioOption[]
+  } | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const response = await fetch("/api/scenarios")
+        const data = await response.json()
+        setOptions(data)
+      } catch (error) {
+        console.error("Error fetching scenario options:", error)
+      }
+    }
+
+    fetchOptions()
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically validate the form and then navigate to the simulation
+    // Store the selected scenario in localStorage for the simulation
+    localStorage.setItem(
+      "currentScenario",
+      JSON.stringify({
+        difficulty,
+        emotion,
+        product,
+      }),
+    )
     router.push("/simulation")
+  }
+
+  if (!options) {
+    return <div>Loading...</div>
   }
 
   return (
@@ -34,10 +66,11 @@ export default function ScenarioForm() {
                 <SelectValue placeholder="Select difficulty" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="beginner">Beginner</SelectItem>
-                <SelectItem value="intermediate">Intermediate</SelectItem>
-                <SelectItem value="advanced">Advanced</SelectItem>
-                <SelectItem value="veteran">Veteran</SelectItem>
+                {options.difficulties.map((option) => (
+                  <SelectItem key={option.id} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -51,10 +84,11 @@ export default function ScenarioForm() {
                 <SelectValue placeholder="Select emotion" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="happy">Happy</SelectItem>
-                <SelectItem value="non-caring">Non-caring</SelectItem>
-                <SelectItem value="angry">Angry</SelectItem>
-                <SelectItem value="confused">Confused</SelectItem>
+                {options.emotions.map((option) => (
+                  <SelectItem key={option.id} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -68,9 +102,11 @@ export default function ScenarioForm() {
                 <SelectValue placeholder="Select product" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="crm">CRM Software</SelectItem>
-                <SelectItem value="erp">ERP System</SelectItem>
-                <SelectItem value="marketing">Marketing Platform</SelectItem>
+                {options.products.map((option) => (
+                  <SelectItem key={option.id} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
