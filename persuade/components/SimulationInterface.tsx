@@ -16,6 +16,7 @@ export default function SimulationInterface() {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [customerEmotion, setCustomerEmotion] = useState("Happy")
   const [callDifficulty, setCallDifficulty] = useState("Beginner")
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null)
   const router = useRouter()
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -30,6 +31,7 @@ export default function SimulationInterface() {
 
   const startAudioAnalysis = async () => {
     try {
+      setSessionStartTime(Date.now()) // Record start time
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       audioContextRef.current = new AudioContext()
       analyserRef.current = audioContextRef.current.createAnalyser()
@@ -111,9 +113,19 @@ export default function SimulationInterface() {
       if (audioContextRef.current) {
         await audioContextRef.current.close()
       }
+
+      // Calculate session duration
+      if (sessionStartTime) {
+        const endTime = Date.now()
+        const duration = endTime - sessionStartTime
+
+        // Save session duration to localStorage for feedback page
+        localStorage.setItem("lastSessionDuration", duration.toString())
+      }
+
       setIsRecording(false)
       setIsCallActive(false)
-      router.push("/")
+      router.push("/feedback")
     } else {
       await startAudioAnalysis()
     }
