@@ -65,14 +65,18 @@ export default function SimulationInterface() {
       await peerConnection.current.setLocalDescription(offer);
 
       const model = "gpt-4o-realtime-preview-2024-12-17";
-      const sdpResponse = await fetch(`https://api.openai.com/v1/realtime?model=${model}`, {
-        method: "POST",
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${EPHEMERAL_KEY}`,
-          "Content-Type": "application/sdp",
-        },
-      });
+      const instructions = encodeURIComponent("I need you to act like a very mad customer who doesn't wsnt to listen to my sales pitch.");
+      const sdpResponse = await fetch(
+        `https://api.openai.com/v1/realtime?model=${model}&instructions=${instructions}`, 
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${EPHEMERAL_KEY}`,
+            "Content-Type": "application/sdp",
+          },
+          body: offer.sdp,
+        }
+      );
 
       const answer = new RTCSessionDescription({
         type: "answer", // ✅ This is now of type 'RTCSessionDescriptionInit'
