@@ -11,6 +11,7 @@ export default function ScenarioForm() {
   const [difficulty, setDifficulty] = useState("")
   const [emotion, setEmotion] = useState("")
   const [product, setProduct] = useState("")
+  const [selectedProduct, setSelectedProduct] = useState("Product")
   const [options, setOptions] = useState<{
     difficulties: ScenarioOption[]
     emotions: ScenarioOption[]
@@ -32,6 +33,14 @@ export default function ScenarioForm() {
     fetchOptions()
   }, [])
 
+  useEffect(() => {
+    const scenarioData = localStorage.getItem("currentScenario")
+    if (scenarioData) {
+      const { product } = JSON.parse(scenarioData)
+      setSelectedProduct(product)
+    }
+  }, [])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Store the selected scenario in localStorage for the simulation
@@ -49,6 +58,15 @@ export default function ScenarioForm() {
   if (!options) {
     return <div>Loading...</div>
   }
+
+  const instructions = encodeURIComponent(
+    `You are an AI sales training simulator playing the role of a ${emotion.toLowerCase()} customer 
+     interested in ${selectedProduct}. This is a ${difficulty.toLowerCase()} level conversation.
+     Your responses should reflect the emotional state and difficulty level selected.
+     Be natural and conversational, presenting realistic objections and concerns specific to ${selectedProduct}.
+     Focus on common customer pain points and objections related to this type of product.
+     Maintain consistent character traits and product knowledge throughout the conversation.`
+  )
 
   return (
     <Card className="neomorphic-flat max-w-md mx-auto bg-[#ffffff] text-[#161616]">

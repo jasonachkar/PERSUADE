@@ -3,11 +3,24 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Menu, Settings } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
 export default function SimulationInterface() {
+  // Default values in case there is no saved scenario.
   const [isCallActive, setIsCallActive] = useState(false);
   const [customerEmotion, setCustomerEmotion] = useState("Happy");
   const [callDifficulty, setCallDifficulty] = useState("Beginner");
@@ -17,18 +30,28 @@ export default function SimulationInterface() {
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const dataChannel = useRef<RTCDataChannel | null>(null);
 
+  // Read scenario settings from localStorage on mount.
+  useEffect(() => {
+    const scenarioData = localStorage.getItem("currentScenario");
+    if (scenarioData) {
+      const { difficulty, emotion } = JSON.parse(scenarioData);
+      // Update the states based on the saved scenario.
+      if (difficulty) setCallDifficulty(difficulty);
+      if (emotion) setCustomerEmotion(emotion);
+    }
+  }, []);
+
   useEffect(() => {
     // Create and attach an audio element for AI responses
     const audio = document.createElement("audio");
     audio.autoplay = true;
     document.body.appendChild(audio);
-    audioEl.current = audio; // Set ref properly
+    audioEl.current = audio;
   }, []);
 
   const startVoiceSession = async () => {
     try {
       setStatus("Requesting ephemeral key...");
-
       // Fetch ephemeral key from our Next.js API route
       const response = await fetch("/api/session");
       const data = await response.json();
@@ -52,7 +75,7 @@ export default function SimulationInterface() {
 
       // Capture microphone input
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStream.getTracks().forEach(track => peerConnection.current?.addTrack(track, mediaStream));
+      mediaStream.getTracks().forEach((track) => peerConnection.current?.addTrack(track, mediaStream));
 
       // Create a data channel for sending/receiving messages
       dataChannel.current = peerConnection.current.createDataChannel("oai-events");
@@ -64,10 +87,15 @@ export default function SimulationInterface() {
       const offer = await peerConnection.current.createOffer();
       await peerConnection.current.setLocalDescription(offer);
 
+      const instructions = encodeURIComponent(
+        `You are an AI sales training simulator playing the role of a ${customerEmotion.toLowerCase()} customer. 
+         This is a ${callDifficulty.toLowerCase()} level conversation.
+         Your responses should reflect the emotional state and difficulty level selected.
+         Be natural and conversational, presenting realistic objections and concerns.`
+      );
       const model = "gpt-4o-realtime-preview-2024-12-17";
-      const instructions = encodeURIComponent("I need you to act like a very mad customer who doesn't wsnt to listen to my sales pitch.");
       const sdpResponse = await fetch(
-        `https://api.openai.com/v1/realtime?model=${model}&instructions=${instructions}`, 
+        `https://api.openai.com/v1/realtime?model=${model}&instructions=${instructions}`,
         {
           method: "POST",
           headers: {
@@ -79,7 +107,7 @@ export default function SimulationInterface() {
       );
 
       const answer = new RTCSessionDescription({
-        type: "answer", // ✅ This is now of type 'RTCSessionDescriptionInit'
+        type: "answer",
         sdp: await sdpResponse.text(),
       });
 
@@ -87,7 +115,6 @@ export default function SimulationInterface() {
 
       setStatus("Connected! Start speaking...");
       setIsCallActive(true);
-
     } catch (error) {
       console.error("Error setting up WebRTC:", error);
       setStatus("Error: ");
@@ -121,7 +148,9 @@ export default function SimulationInterface() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="customerEmotion" className="text-right">Customer Emotion</Label>
+                <Label htmlFor="customerEmotion" className="text-right">
+                  Customer Emotion
+                </Label>
                 <Select value={customerEmotion} onValueChange={setCustomerEmotion}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select customer emotion" />
@@ -135,7 +164,9 @@ export default function SimulationInterface() {
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="callDifficulty" className="text-right">Call Difficulty</Label>
+                <Label htmlFor="callDifficulty" className="text-right">
+                  Call Difficulty
+                </Label>
                 <Select value={callDifficulty} onValueChange={setCallDifficulty}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select call difficulty" />
@@ -158,7 +189,9 @@ export default function SimulationInterface() {
         <p>{status}</p>
         <Button
           onClick={isCallActive ? stopVoiceSession : startVoiceSession}
-          className={`w-20 h-20 rounded-full ${isCallActive ? "bg-red-600" : "bg-green-600"} text-white shadow-lg`}
+          className={`w-20 h-20 rounded-full ${
+            isCallActive ? "bg-red-600" : "bg-green-600"
+          } text-white shadow-lg`}
         >
           <Mic className="h-10 w-10" />
         </Button>
