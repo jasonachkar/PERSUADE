@@ -213,6 +213,7 @@ export async function initializeScenarioOptions() {
       { id: "2", category: "emotion", value: "non-caring", label: "Non-caring" },
       { id: "3", category: "emotion", value: "angry", label: "Angry" },
       { id: "4", category: "emotion", value: "confused", label: "Confused" },
+      { id: "5", category: "emotion", value: "normal", label: "normal" },
     ],
     products: [
       { id: "1", category: "product", value: "crm", label: "CRM Software" },
