@@ -60,14 +60,14 @@ export default function SimulationInterface() {
     try {
       setStatus("Requesting ephemeral key...");
       // Fetch ephemeral key from our Next.js API route
-      const response = await fetch("/api/session");
-      const data = await response.json();
+      const ephemeralResponse = await fetch("/api/session");
+      const ephemeralData = await ephemeralResponse.json();
 
-      if (!data.client_secret) {
+      if (!ephemeralData.client_secret) {
         throw new Error("Failed to get ephemeral key");
       }
 
-      const EPHEMERAL_KEY = data.client_secret.value;
+      const EPHEMERAL_KEY = ephemeralData.client_secret.value;
       setStatus("Connecting to OpenAI Realtime API...");
 
       // Create WebRTC peer connection
@@ -95,28 +95,22 @@ export default function SimulationInterface() {
       const offer = await peerConnection.current.createOffer();
       await peerConnection.current.setLocalDescription(offer);
 
-      const instructions = encodeURIComponent(
-        `You are an AI sales training simulator playing the role of a ${customerEmotion.toLowerCase()} customer. 
-         This is a ${callDifficulty.toLowerCase()} level conversation.
-         Your responses should reflect the emotional state and difficulty level selected.
-         Be natural and conversational, presenting realistic objections and concerns.`
-      );
-      const model = "gpt-4o-realtime-preview-2024-12-17";
-      const sdpResponse = await fetch(
-        `https://api.openai.com/v1/realtime?model=${model}&instructions=${instructions}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${EPHEMERAL_KEY}`,
-            "Content-Type": "application/sdp",
-          },
-          body: offer.sdp,
-        }
-      );
+      const sessionResponse = await fetch('/api/session/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          offerSdp: offer.sdp,
+          customerEmotion,
+          callDifficulty,
+        }),
+      });
 
+      const sessionData = await sessionResponse.json();
       const answer = new RTCSessionDescription({
         type: "answer",
-        sdp: await sdpResponse.text(),
+        sdp: sessionData.answerSdp,
       });
 
       await peerConnection.current.setRemoteDescription(answer);
