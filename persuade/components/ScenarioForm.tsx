@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
-import type { ScenarioOption } from "@/lib/kv"
+import type { ScenarioOption, Product } from "@/lib/kv"
 
 export default function ScenarioForm() {
   const [difficulty, setDifficulty] = useState("")
@@ -15,22 +15,31 @@ export default function ScenarioForm() {
   const [options, setOptions] = useState<{
     difficulties: ScenarioOption[]
     emotions: ScenarioOption[]
-    products: ScenarioOption[]
   } | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
   const router = useRouter()
 
   useEffect(() => {
-    const fetchOptions = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/scenarios")
-        const data = await response.json()
-        setOptions(data)
+        // Fetch scenario options (difficulties and emotions)
+        const scenarioResponse = await fetch("/api/scenarios")
+        const scenarioData = await scenarioResponse.json()
+        setOptions({
+          difficulties: scenarioData.difficulties,
+          emotions: scenarioData.emotions,
+        })
+
+        // Fetch products
+        const productsResponse = await fetch("/api/products")
+        const productsData = await productsResponse.json()
+        setProducts(productsData)
       } catch (error) {
-        console.error("Error fetching scenario options:", error)
+        console.error("Error fetching data:", error)
       }
     }
 
-    fetchOptions()
+    fetchData()
   }, [])
 
   useEffect(() => {
@@ -120,9 +129,9 @@ export default function ScenarioForm() {
                 <SelectValue placeholder="Select product" />
               </SelectTrigger>
               <SelectContent>
-                {options.products.map((option) => (
-                  <SelectItem key={option.id} value={option.value}>
-                    {option.label}
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.name}>
+                    {product.name}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -18,17 +18,18 @@ export default function ProductsSection() {
       try {
         setIsLoading(true)
         setError(null)
-        const response = await fetch("/api/products")
+        const response = await fetch("/api/products", {
+          next: { revalidate: 0 }
+        })
         console.log("API Response status:", response.status)
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
 
-        const text = await response.text()
-        console.log("Raw API response:", text)
+        const data = await response.json()
+        console.log("Raw API response:", data)
 
-        const data = JSON.parse(text)
         console.log("Parsed products:", data)
 
         if (Array.isArray(data)) {
@@ -61,6 +62,10 @@ export default function ProductsSection() {
       const updatedProducts = await response.json()
       if (Array.isArray(updatedProducts)) {
         setProducts(updatedProducts)
+      } else {
+        // Fallback to refetch
+        const refreshedProducts = await fetch("/api/products").then(res => res.json())
+        setProducts(refreshedProducts)
       }
     } catch (error) {
       console.error("Error deleting product:", error)

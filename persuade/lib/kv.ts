@@ -45,8 +45,7 @@ export interface Product {
 // Products
 export async function getProducts(): Promise<Product[]> {
   try {
-    const products = await kv.hgetall("products") // Get all products from hash
-    if (!products) return []
+    const products = await kv.hgetall("products") || {}
 
     return Object.values(products)
       .map((product) => (typeof product === "string" ? JSON.parse(product) : product))
@@ -182,21 +181,41 @@ export async function getTotalSimulations(userId: string): Promise<number> {
 }
 
 // Scenarios
+export async function createScenarioOption(option: Omit<ScenarioOption, "id">): Promise<ScenarioOption> {
+  const id = nanoid()
+  const newOption = {
+    ...option,
+    id,
+  }
+
+  try {
+    const key = `scenarios:${option.category}`
+    const currentOptions = (await kv.get<ScenarioOption[]>(key)) || []
+    await kv.set(key, [...currentOptions, newOption])
+    return newOption
+  } catch (error) {
+    console.error(`Error creating ${option.category} option in KV:`, error)
+    throw error
+  }
+}
+
 export async function getScenarioOptions(): Promise<{
   difficulties: ScenarioOption[]
   emotions: ScenarioOption[]
-  products: ScenarioOption[]
 }> {
-  const [difficulties, emotions, products] = await Promise.all([
-    kv.get("scenarios:difficulties"),
-    kv.get("scenarios:emotions"),
-    kv.get("scenarios:products"),
-  ])
+  try {
+    const [difficulties, emotions] = await Promise.all([
+      kv.get("scenarios:difficulties") || [],
+      kv.get("scenarios:emotions") || [],
+    ])
 
-  return {
-    difficulties: (difficulties as ScenarioOption[]) || [],
-    emotions: (emotions as ScenarioOption[]) || [],
-    products: (products as ScenarioOption[]) || [],
+    return {
+      difficulties: difficulties as ScenarioOption[],
+      emotions: emotions as ScenarioOption[],
+    }
+  } catch (error) {
+    console.error("Error fetching scenario options:", error)
+    return { difficulties: [], emotions: [] }
   }
 }
 
