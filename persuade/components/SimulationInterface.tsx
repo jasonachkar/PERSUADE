@@ -25,6 +25,7 @@ export default function SimulationInterface() {
   const [isCallActive, setIsCallActive] = useState(false);
   const [customerEmotion, setCustomerEmotion] = useState("Happy");
   const [callDifficulty, setCallDifficulty] = useState("Beginner");
+  const [product, setProduct] = useState("Demo Product");
   const [status, setStatus] = useState("Click to start speaking...");
   const audioEl = useRef<HTMLAudioElement | null>(null);
 
@@ -41,10 +42,11 @@ export default function SimulationInterface() {
   useEffect(() => {
     const scenarioData = localStorage.getItem("currentScenario");
     if (scenarioData) {
-      const { difficulty, emotion } = JSON.parse(scenarioData);
+      const { difficulty, emotion, product } = JSON.parse(scenarioData);
       // Update the states based on the saved scenario.
       if (difficulty) setCallDifficulty(difficulty);
       if (emotion) setCustomerEmotion(emotion);
+      if (product) setProduct(product);
     }
   }, []);
 
@@ -104,6 +106,7 @@ export default function SimulationInterface() {
           offerSdp: offer.sdp,
           customerEmotion,
           callDifficulty,
+          product,
         }),
       });
 
@@ -161,7 +164,7 @@ export default function SimulationInterface() {
       const scenarioData = {
         difficulty: callDifficulty,
         emotion: customerEmotion,
-        product: "Demo Product", // Replace with actual product if available
+        product: product, // Replace with actual product if available
       };
       localStorage.setItem("currentScenario", JSON.stringify(scenarioData));
 

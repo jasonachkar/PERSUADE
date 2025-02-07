@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-    const { offerSdp, customerEmotion, callDifficulty } = await req.json();
+    const { offerSdp, customerEmotion, callDifficulty, product } = await req.json();
     
     // Get ephemeral key from OpenAI
     const sessionResponse = await fetch('https://api.openai.com/v1/realtime/sessions', {
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const ephemeralKey = sessionData.client_secret.value;
   
     // Construct instructions
-    const instructions = `You are an AI sales training simulator playing the role of a ${customerEmotion.toLowerCase()} customer. This is a ${callDifficulty.toLowerCase()} level conversation. Your responses should reflect the emotional state and difficulty level selected. Be natural and conversational, presenting realistic objections and concerns.`;
+    const instructions = `You are an AI sales training simulator playing the role of a ${customerEmotion.toLowerCase()} customer. This is a ${callDifficulty.toLowerCase()} level conversation. Your responses should reflect the emotional state and difficulty level selected. Be natural and conversational, presenting realistic objections and concerns. The user is trying to sell you a ${product.toLowerCase()}.`;
   
     // Send offer to OpenAI
     const sdpResponse = await fetch(`https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&instructions=${encodeURIComponent(instructions)}`, {
