@@ -19,26 +19,22 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import RobotFace, { RobotFaceProps } from "@/components/RobotFace";
 
 export default function SimulationInterface() {
-  // Default values in case there is no saved scenario.
   const [isCallActive, setIsCallActive] = useState(false);
   const [customerEmotion, setCustomerEmotion] = useState("Happy");
   const [callDifficulty, setCallDifficulty] = useState("Beginner");
   const [product, setProduct] = useState("Demo Product");
   const [status, setStatus] = useState("Click to start speaking...");
   const audioEl = useRef<HTMLAudioElement | null>(null);
-
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const dataChannel = useRef<RTCDataChannel | null>(null);
-
   const router = useRouter();
-
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
-
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const audioContainer = useRef<HTMLDivElement>(null);
 
-  // Read scenario settings from localStorage on mount.
   useEffect(() => {
     const scenarioData = localStorage.getItem("currentScenario");
     if (scenarioData) {
@@ -51,12 +47,33 @@ export default function SimulationInterface() {
   }, []);
 
   useEffect(() => {
-    // Create and attach an audio element for AI responses
     const audio = document.createElement("audio");
     audio.autoplay = true;
-    document.body.appendChild(audio);
+    audioContainer.current?.appendChild(audio);
     audioEl.current = audio;
+
+    return () => {
+      if (audioEl.current) {
+        audioContainer.current?.removeChild(audioEl.current);
+      }
+    };
   }, []);
+
+  // Update the getRobotFaceEmotion function with proper typing
+  const getRobotFaceEmotion = (emotion: string): RobotFaceProps["emotion"] => {
+    const lowerEmotion = emotion.toLowerCase();
+    switch (lowerEmotion) {
+      case "non-caring": return "neutral";
+      case "confused": return "sad";
+      case "happy": return "happy";
+      case "angry": return "angry";
+      case "neutral": return "neutral";
+      case "listening": return "listening";
+      case "talking": return "talking";
+      default: return "neutral"; // Fallback to neutral
+    }
+  };
+
 
   const startVoiceSession = async () => {
     try {
@@ -81,7 +98,11 @@ export default function SimulationInterface() {
           audioEl.current.srcObject = event.streams[0];
         }
       };
-
+      // Then update the RobotFace component usage:
+      <RobotFace
+        audioEl={audioEl.current}
+        emotion={getRobotFaceEmotion(customerEmotion)}
+      />
       // Capture microphone input
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStream.getTracks().forEach((track) => peerConnection.current?.addTrack(track, mediaStream));
@@ -126,6 +147,7 @@ export default function SimulationInterface() {
     }
   };
 
+
   const stopVoiceSession = async () => {
     if (peerConnection.current) {
       peerConnection.current.close();
@@ -137,8 +159,6 @@ export default function SimulationInterface() {
   const handleEndCall = async () => {
     try {
       setStatus("Evaluating conversation...");
-      
-      // Get evaluation from API
       const response = await fetch("/api/evaluate", {
         method: "POST",
         headers: {
@@ -146,28 +166,19 @@ export default function SimulationInterface() {
         },
         body: JSON.stringify({ messages }),
       });
-
       if (!response.ok) {
         throw new Error("Failed to evaluate conversation");
       }
-
       const evaluation = await response.json();
-      
-      // Store feedback in localStorage
       localStorage.setItem("lastCallFeedback", JSON.stringify(evaluation));
-      
-      // Save session duration
       const duration = Date.now() - sessionStartTime;
       localStorage.setItem("lastSessionDuration", duration.toString());
-      
-      // Save current scenario
       const scenarioData = {
         difficulty: callDifficulty,
         emotion: customerEmotion,
-        product: product, // Replace with actual product if available
+        product: "Demo Product",
       };
       localStorage.setItem("currentScenario", JSON.stringify(scenarioData));
-
       await stopVoiceSession();
       router.push("/feedback");
     } catch (error) {
@@ -178,7 +189,6 @@ export default function SimulationInterface() {
 
   return (
     <div className="min-h-screen bg-[#ffffff] text-[#161616]">
-      {/* Header */}
       <header className="p-4 flex items-center justify-between">
         <Button variant="ghost" size="icon" className="text-[#161616]">
           <Menu className="h-6 w-6" />
@@ -231,14 +241,16 @@ export default function SimulationInterface() {
         </Dialog>
       </header>
 
-      {/* Main Content */}
       <main className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
         <p>{status}</p>
+        <RobotFace
+          audioEl={audioEl.current}
+          emotion={getRobotFaceEmotion(customerEmotion)}
+        />
         <Button
           onClick={isCallActive ? handleEndCall : startVoiceSession}
-          className={`w-20 h-20 rounded-full ${
-            isCallActive ? "bg-red-600" : "bg-green-600"
-          } text-white shadow-lg`}
+          className={`w-20 h-20 rounded-full ${isCallActive ? "bg-red-600" : "bg-green-600"
+            } text-white shadow-lg`}
         >
           <Mic className="h-10 w-10" />
         </Button>
@@ -250,7 +262,7 @@ export default function SimulationInterface() {
         >
           End Call & Get Feedback
         </Button>
-        <audio ref={audioEl} className="hidden" />
+        <div ref={audioContainer} className="hidden" />
       </main>
     </div>
   );
