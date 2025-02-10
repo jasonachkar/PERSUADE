@@ -2,9 +2,8 @@ import Dashboard from "@/components/Dashboard"
 
 export default function Home() {
   return (
-    <main className="min-h-screen p-8">
+    <main className="w-screen items-center justify-center p-8">
       <Dashboard />
     </main>
   )
 }
-

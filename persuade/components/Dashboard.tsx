@@ -23,7 +23,6 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const userId = "demo-user"
-        console.log("Fetching data for user:", userId)
         const response = await fetch(`/api/training?userId=${userId}`, {
           cache: "no-store",
         })
@@ -31,7 +30,6 @@ export default function Dashboard() {
           throw new Error("Failed to fetch dashboard data")
         }
         const result = await response.json()
-        console.log("Fetched data:", result)
         setData(result)
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
@@ -41,21 +39,15 @@ export default function Dashboard() {
     }
 
     fetchData()
-
-    // Set up an interval to refresh data every 30 seconds
     const intervalId = setInterval(fetchData, 30000)
-
-    // Cleanup interval on unmount
     return () => clearInterval(intervalId)
   }, [])
 
-  // Add event listener for focus to refresh data
   useEffect(() => {
     const handleFocus = () => {
       const fetchData = async () => {
         try {
           const userId = "demo-user"
-          console.log("Fetching data for user:", userId)
           const response = await fetch(`/api/training?userId=${userId}`, {
             cache: "no-store",
           })
@@ -63,7 +55,6 @@ export default function Dashboard() {
             throw new Error("Failed to fetch dashboard data")
           }
           const result = await response.json()
-          console.log("Fetched data:", result)
           setData(result)
         } catch (error) {
           console.error("Error fetching dashboard data:", error)
@@ -79,7 +70,11 @@ export default function Dashboard() {
   }, [])
 
   if (loading) {
-    return <div className="text-center">Loading...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-primary font-medium">Loading...</div>
+      </div>
+    )
   }
 
   const formatDuration = (ms: number) => {
@@ -88,106 +83,113 @@ export default function Dashboard() {
     return `${hours}h ${minutes}m`
   }
 
-  const getLastSessionText = () => {
-    if (!data?.lastSessionTime) return "No sessions yet"
-    const now = Date.now()
-    const diff = now - data.lastSessionTime
-    if (diff < 1000 * 60 * 60) {
-      // Less than 1 hour
-      return "+1 from last session"
-    }
-    return "No recent sessions"
-  }
-
   return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-bold text-center mb-8">Sales Training Simulator</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="neomorphic-flat">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Simulations</CardTitle>
-            <PhoneCall className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data?.totalSimulations ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {data?.totalSimulations ? "+1 from last session" : "No sessions yet"}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold text-primary">PERSUADE</h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Your AI-powered training platform for professional development
             </p>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="neomorphic-flat">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data?.sessions.length
-                ? `${(data.sessions.reduce((sum, session) => sum + session.overallScore, 0) / data.sessions.length).toFixed(1)} / 5`
-                : "N/A"}
-            </div>
-            <p className="text-xs text-muted-foreground">Based on all simulations</p>
-          </CardContent>
-        </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Simulations</CardTitle>
+                <PhoneCall className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{data?.totalSimulations ?? 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {data?.totalSimulations ? "+1 from last session" : "No sessions yet"}
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card className="neomorphic-flat">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Training Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatDuration(data?.totalTrainingTime || 0)}</div>
-            <p className="text-xs text-muted-foreground">Across all sessions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="neomorphic-flat">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1</div>
-            <p className="text-xs text-muted-foreground">Current session</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex justify-center mt-8">
-        <Link href="/scenario-selection">
-          <Button className="neomorphic-flat hover:neomorphic-pressed transition-all duration-300 text-lg px-8 py-4 rounded-full">
-            Start New Simulation
-          </Button>
-        </Link>
-      </div>
-
-      <ProductsSection />
-
-      <Card className="neomorphic-flat mt-8">
-        <CardHeader>
-          <CardTitle>Recent Training Sessions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-4">
-            {data?.sessions.slice(-3).map((session) => (
-              <li key={session.id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
-                <div>
-                  <h3 className="font-semibold">
-                    {session.scenario.product} - {session.scenario.difficulty}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Customer Emotion: {session.scenario.emotion}</p>
+            <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                <BarChart2 className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">
+                  {data?.sessions.length
+                    ? `${(data.sessions.reduce((sum, session) => sum + session.overallScore, 0) / data.sessions.length).toFixed(1)} / 5`
+                    : "N/A"}
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">Score: {session.overallScore}/5</p>
-                  <p className="text-sm text-muted-foreground">{new Date(session.startTime).toLocaleDateString()}</p>
+                <p className="text-xs text-muted-foreground">Based on all simulations</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Training Time</CardTitle>
+                <Clock className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{formatDuration(data?.totalTrainingTime || 0)}</div>
+                <p className="text-xs text-muted-foreground">Across all sessions</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                <Users className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">1</div>
+                <p className="text-xs text-muted-foreground">Current session</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-center">
+            <Link href="/scenario-selection">
+              <Button className="bg-primary hover:bg-primary/90 text-white font-medium px-8 py-6 rounded-md text-lg shadow-md hover:shadow-lg transition-all">
+                Start New Simulation
+              </Button>
+            </Link>
+          </div>
+
+          <div className="space-y-8">
+            <ProductsSection />
+
+            <Card className="bg-white shadow-md">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-primary">Recent Training Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {data?.sessions.slice(-3).map((session) => (
+                    <div
+                      key={session.id}
+                      className="p-4 rounded-lg border border-gray-100 hover:border-primary/20 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h3 className="font-medium text-gray-900">
+                            {session.scenario.product} - {session.scenario.difficulty}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">Customer Emotion: {session.scenario.emotion}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-primary">Score: {session.overallScore}/5</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(session.startTime).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
