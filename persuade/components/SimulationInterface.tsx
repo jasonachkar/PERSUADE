@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import RobotFace, { RobotFaceProps } from "@/components/RobotFace";
+
 
 export default function SimulationInterface() {
   const [isCallActive, setIsCallActive] = useState(false);
@@ -59,20 +59,7 @@ export default function SimulationInterface() {
     };
   }, []);
 
-  // Update the getRobotFaceEmotion function with proper typing
-  const getRobotFaceEmotion = (emotion: string): RobotFaceProps["emotion"] => {
-    const lowerEmotion = emotion.toLowerCase();
-    switch (lowerEmotion) {
-      case "non-caring": return "neutral";
-      case "confused": return "sad";
-      case "happy": return "happy";
-      case "angry": return "angry";
-      case "neutral": return "neutral";
-      case "listening": return "listening";
-      case "talking": return "talking";
-      default: return "neutral"; // Fallback to neutral
-    }
-  };
+
 
 
   const startVoiceSession = async () => {
@@ -99,10 +86,7 @@ export default function SimulationInterface() {
         }
       };
       // Then update the RobotFace component usage:
-      <RobotFace
-        audioEl={audioEl.current}
-        emotion={getRobotFaceEmotion(customerEmotion)}
-      />
+
       // Capture microphone input
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStream.getTracks().forEach((track) => peerConnection.current?.addTrack(track, mediaStream));
@@ -243,10 +227,7 @@ export default function SimulationInterface() {
 
       <main className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
         <p>{status}</p>
-        <RobotFace
-          audioEl={audioEl.current}
-          emotion={getRobotFaceEmotion(customerEmotion)}
-        />
+
         <Button
           onClick={isCallActive ? handleEndCall : startVoiceSession}
           className={`w-20 h-20 rounded-full ${isCallActive ? "bg-red-600" : "bg-green-600"
