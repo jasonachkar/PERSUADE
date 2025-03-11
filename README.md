@@ -139,6 +139,6 @@ PERSUADE is open-source and released under the MIT License. Please see the [LICE
 
 ## Contact
 For any inquiries or feedback regarding PERSUADE, please reach out:
-- **Email:** your-email@example.com
+- **Email:** jasonachkardiab@gmail.com
 - **GitHub:** [jasonachkar](https://github.com/jasonachkar)
 ```
