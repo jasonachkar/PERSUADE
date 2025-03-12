@@ -7,7 +7,7 @@ import { PhoneCall, BarChart2, Clock, Users } from "lucide-react"
 import Link from "next/link"
 import type { TrainingSession } from "@/lib/kv"
 import ProductsSection from "@/components/ProductsSection"
-import { useAuth, SignInButton } from "@clerk/nextjs"
+import { useAuth, SignInButton, SignIn } from "@clerk/nextjs"
 
 interface DashboardData {
   sessions: TrainingSession[]
@@ -92,6 +92,15 @@ export default function Dashboard() {
     window.addEventListener("focus", handleFocus)
     return () => window.removeEventListener("focus", handleFocus)
   }, [userId])
+
+  // If user is not logged in, render the SignIn component using hash-based routing.
+  if (!userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <SignIn routing="hash" />
+      </div>
+    )
+  }
 
   if (loading || !data) {
     return (
