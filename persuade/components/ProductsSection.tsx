@@ -73,6 +73,16 @@ export default function ProductsSection() {
     }
   }
 
+  const getImageSource = (product: Product) => {
+    if (product.image) {
+      const imageType = product.image.type
+      const imageData = product.image.data
+      const base64Image = btoa(String.fromCharCode(...Array.from(new Uint8Array(imageData))))
+      return `data:${imageType};base64,${base64Image}`
+    }
+    return "/placeholder.svg?height=200&width=200"
+  }
+
   return (
     <Card className="mt-8">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -97,7 +107,7 @@ export default function ProductsSection() {
               <Card key={product.id} className="overflow-hidden">
                 <div className="relative h-48 w-full">
                   <Image
-                    src={product.imageUrl || "/placeholder.svg?height=200&width=200"}
+                    src={getImageSource(product)}
                     alt={product.name}
                     fill
                     className="object-cover"

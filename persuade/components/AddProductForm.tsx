@@ -5,39 +5,45 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import Image from 'next/image'
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Upload } from "lucide-react"
 
 export default function AddProductForm() {
   const [name, setName] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
   const [description, setDescription] = useState("")
+  const [image, setImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImage(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", description);
+      if (image) {
+        formData.append("image", image);
+      }
+
       const response = await fetch("/api/products", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          imageUrl,
-          description,
-        }),
+        body: formData,
       })
 
       if (response.ok) {
         router.push("/")
         router.refresh()
       } else {
-        throw new Error("Failed to create product")
+        throw new Error("Failed to create product");
       }
     } catch (error) {
       console.error("Error creating product:", error)
@@ -65,28 +71,22 @@ export default function AddProductForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <div className="flex gap-2">
-              <Input
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Enter image URL"
-                required
+            <Label htmlFor="image">Image</Label>
+            <Input
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            {image && (
+              <Image
+                src={URL.createObjectURL(image)}
+                alt="Uploaded Image"
+                className="mt-2 max-h-40"
+                width={500}
+                height={500}
               />
-              <Button
-                type="button"
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => {
-                  // In a real app, this would open a file picker and handle image upload
-                  setImageUrl("/placeholder.svg?height=200&width=200")
-                }}
-              >
-                <Upload className="h-4 w-4" />
-                Upload
-              </Button>
-            </div>
+            )}
           </div>
 
           <div className="space-y-2">

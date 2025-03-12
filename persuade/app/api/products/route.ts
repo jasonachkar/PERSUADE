@@ -5,11 +5,28 @@ export const dynamic = "force-dynamic" // Ensure fresh data on every request
 
 export async function POST(req: Request) {
   try {
-    const product = await req.json()
+    const formData = await req.formData()
+    const name = formData.get("name") as string
+    const description = formData.get("description") as string
+    const imageFile = formData.get("image") as File | null
 
-    if (!product.name || !product.imageUrl || !product.description) {
+    if (!name || !description) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 })
     }
+
+    let imageBuffer: ArrayBuffer | null = null;
+    let imageType: string = "";
+
+    if (imageFile) {
+      imageBuffer = await imageFile.arrayBuffer();
+      imageType = imageFile.type || "";
+    }
+
+    const product = {
+      name,
+      description,
+      image: imageBuffer ? { type: imageType, data: Array.from(new Uint8Array(imageBuffer)) } : null,
+    };
 
     const newProduct = await createProduct(product)
     return NextResponse.json(newProduct)

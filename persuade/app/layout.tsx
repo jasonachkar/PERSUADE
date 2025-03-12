@@ -39,29 +39,19 @@ export default function RootLayout({
 
               <nav className="hidden md:flex items-center space-x-6">
                 <Link
-                  href="/platform"
+                  href="/"
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
-                  Platform
+                  Home
                 </Link>
+
                 <Link
-                  href="/resources"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Resources
-                </Link>
-                <Link
-                  href="/about"
+                  href="/about-us"
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
                   About Us
                 </Link>
-                <Link
-                  href="/terms"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Terms of Service
-                </Link>
+
                 <Link
                   href="/pricing"
                   className="text-sm text-gray-600 hover:text-gray-900"

@@ -37,8 +37,8 @@ export interface ScenarioOption {
 export interface Product {
   id: string
   name: string
-  imageUrl: string
   description: string
+  image: { type: string; data: number[] } | null // Store image as type and data
   createdAt: number
 }
 
