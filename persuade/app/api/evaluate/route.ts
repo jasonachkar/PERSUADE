@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         {
           role: "user",
           content: `${evaluationPrompt}\n\nConversation to evaluate:\n${messages
-            .map((m: any) => `${m.role}: ${m.content}`)
+            .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
             .join("\n")}`,
         },
       ],

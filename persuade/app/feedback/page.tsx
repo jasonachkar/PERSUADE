@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ThumbsUp, ThumbsDown, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import type { TrainingSession } from "@/lib/kv"
 
 interface ProcessedFeedback {
@@ -19,7 +18,6 @@ interface ProcessedFeedback {
 export default function Feedback() {
   const [feedback, setFeedback] = useState<ProcessedFeedback | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     const processFeedback = async () => {

@@ -51,8 +51,6 @@ export default function SimulationInterface() {
       if (!ephemeralData.client_secret) {
         throw new Error("Failed to get ephemeral key")
       }
-
-      const EPHEMERAL_KEY = ephemeralData.client_secret.value
       setStatus("Connecting to OpenAI Realtime API...")
 
       peerConnection.current = new RTCPeerConnection()
