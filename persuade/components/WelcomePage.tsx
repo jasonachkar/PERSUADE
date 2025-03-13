@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { useAuth, SignUpButton } from "@clerk/nextjs"
-import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react"
+import { ArrowRight, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
@@ -37,38 +37,21 @@ export default function WelcomePage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            {/* Navigation */}
-            <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center">
-                            <Image
-                                src="/logo.png"
-                                alt="Logo"
-                                width={32}
-                                height={32}
-                                className="w-8 h-8"
-                            />
-                            <span className="ml-2 text-xl font-bold text-gray-900">PERSUADE</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <Button variant="ghost" onClick={() => router.push('/sign-in')}>
-                                Sign In
-                            </Button>
-                            <Button onClick={() => router.push('/sign-up')}>
-                                Get Started
-                                <ChevronRight className="ml-2 h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
             {/* Hero Section */}
-            <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+            <section className="py-16 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <div>
+                            <div className="flex items-center mb-8">
+                                <Image
+                                    src="/logo.svg"
+                                    alt="PERSUADE Logo"
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10"
+                                />
+                                <span className="ml-3 text-2xl font-bold text-gray-900">PERSUADE</span>
+                            </div>
                             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 leading-tight mb-6">
                                 Master Sales Calls,
                                 <br />
@@ -87,7 +70,7 @@ export default function WelcomePage() {
                         </div>
                         <div className="relative h-[400px] lg:h-[500px]">
                             <Image
-                                src="/hero-image.png"
+                                src="/hero-image.svg"
                                 alt="Sales Training Illustration"
                                 fill
                                 className="object-contain"
@@ -145,7 +128,7 @@ export default function WelcomePage() {
                             src="/demo-screenshot.png"
                             alt="Product Demo"
                             fill
-                            className="object-cover"
+                            className="object-contain"
                         />
                     </div>
                 </div>
@@ -158,8 +141,8 @@ export default function WelcomePage() {
                         <div className="col-span-2">
                             <div className="flex items-center mb-4">
                                 <Image
-                                    src="/logo.png"
-                                    alt="Logo"
+                                    src="/logo.svg"
+                                    alt="PERSUADE Logo"
                                     width={32}
                                     height={32}
                                     className="w-8 h-8"
