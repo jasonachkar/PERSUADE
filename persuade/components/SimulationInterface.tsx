@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
 
 export default function SimulationInterface() {
+  const { userId } = useAuth()
   const [isCallActive, setIsCallActive] = useState(false)
   const [customerEmotion, setCustomerEmotion] = useState("Happy")
   const [callDifficulty, setCallDifficulty] = useState("Beginner")
@@ -115,6 +117,22 @@ export default function SimulationInterface() {
     try {
       setStatus("Evaluating conversation...")
 
+      // Calculate training duration
+      const duration = Date.now() - sessionStartTime
+
+      // Update training time metrics
+      await fetch("/api/metrics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          type: "training_time",
+          value: duration
+        }),
+      })
+
       const response = await fetch("/api/evaluate", {
         method: "POST",
         headers: {
@@ -129,9 +147,26 @@ export default function SimulationInterface() {
 
       const evaluation = await response.json()
 
-      localStorage.setItem("lastCallFeedback", JSON.stringify(evaluation))
+      // Save training session
+      await fetch("/api/training", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          scenario: {
+            difficulty: callDifficulty,
+            emotion: customerEmotion,
+            product: product,
+          },
+          startTime: sessionStartTime,
+          duration: duration,
+          overallScore: evaluation.overallScore,
+        }),
+      })
 
-      const duration = Date.now() - sessionStartTime
+      localStorage.setItem("lastCallFeedback", JSON.stringify(evaluation))
       localStorage.setItem("lastSessionDuration", duration.toString())
 
       const scenarioData = {

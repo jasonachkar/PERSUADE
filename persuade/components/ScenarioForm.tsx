@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
 import type { ScenarioOption, Product } from "@/lib/kv"
 
 export default function ScenarioForm() {
@@ -17,6 +18,7 @@ export default function ScenarioForm() {
   } | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const router = useRouter()
+  const { userId } = useAuth()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,10 +43,10 @@ export default function ScenarioForm() {
     fetchData()
   }, [])
 
-
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Store scenario data
     localStorage.setItem(
       "currentScenario",
       JSON.stringify({
@@ -53,6 +55,23 @@ export default function ScenarioForm() {
         product,
       }),
     )
+
+    try {
+      // Update metrics for simulation start
+      await fetch("/api/metrics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          type: "simulation_start"
+        }),
+      })
+    } catch (error) {
+      console.error("Error updating metrics:", error)
+    }
+
     router.push("/simulation")
   }
 
@@ -63,7 +82,6 @@ export default function ScenarioForm() {
       </div>
     )
   }
-
 
   return (
     <div className="min-h-screen bg-gray-50">

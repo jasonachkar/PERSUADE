@@ -28,14 +28,24 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/training?userId=${userId}`, {
-          cache: "no-store",
-        })
-        if (!response.ok) {
+        const [trainingResponse, metricsResponse] = await Promise.all([
+          fetch(`/api/training?userId=${userId}`, { cache: "no-store" }),
+          fetch(`/api/metrics?userId=${userId}`, { cache: "no-store" })
+        ])
+
+        if (!trainingResponse.ok || !metricsResponse.ok) {
           throw new Error("Failed to fetch dashboard data")
         }
-        const result = await response.json()
-        setData(result)
+
+        const trainingData = await trainingResponse.json()
+        const metricsData = await metricsResponse.json()
+
+        setData({
+          sessions: trainingData.sessions || [],
+          totalSimulations: metricsData.totalSimulations || 0,
+          totalTrainingTime: metricsData.totalTrainingTime || 0,
+          lastSessionTime: metricsData.lastSessionTime || 0
+        })
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
       } finally {

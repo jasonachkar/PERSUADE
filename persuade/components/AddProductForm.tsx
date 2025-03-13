@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import Image from 'next/image'
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { toast } from "@/components/ui/use-toast"
 
 export default function AddProductForm() {
   const [name, setName] = useState("")
@@ -16,9 +17,24 @@ export default function AddProductForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setImage(e.target.files[0]);
+      const file = e.target.files[0];
+
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "Error",
+          description: "Image size must be less than 5MB",
+          variant: "destructive",
+        });
+        e.target.value = ''; // Reset the input
+        return;
+      }
+
+      setImage(file);
     }
   };
 

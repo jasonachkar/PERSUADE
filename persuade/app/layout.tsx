@@ -11,6 +11,7 @@ import { Inter } from "next/font/google"
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -92,6 +93,7 @@ export default function RootLayout({
             </div>
           </header>
           <main className="container py-6">{children}</main>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
