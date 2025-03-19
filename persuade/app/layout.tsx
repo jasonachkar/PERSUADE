@@ -53,12 +53,21 @@ export default function RootLayout({
                   About Us
                 </Link>
 
-                <Link
-                  href="/pricing"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Pricing
-                </Link>
+                <SignedIn>
+                  <Link
+                    href="/pricing"
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Pricing
+                  </Link>
+                </SignedIn>
+                <SignedOut>
+                  <SignInButton mode="modal" forceRedirectUrl="/pricing">
+                    <button className="text-sm text-gray-600 hover:text-gray-900">
+                      Pricing
+                    </button>
+                  </SignInButton>
+                </SignedOut>
               </nav>
 
               <div className="flex items-center space-x-4">

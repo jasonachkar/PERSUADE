@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@clerk/nextjs"
+import { toast } from "@/components/ui/use-toast"
 
 export default function Pricing() {
+    const { userId } = useAuth()
+    const [loading, setLoading] = useState<string | null>(null)
     const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly')
 
     const plans = [
@@ -20,7 +24,8 @@ export default function Pricing() {
                 "Community support"
             ],
             cta: "Start for Free",
-            popular: false
+            popular: false,
+            stripeIds: { monthly: null, yearly: null }
         },
         {
             name: "Pro Plan",
@@ -34,7 +39,11 @@ export default function Pricing() {
                 "Email support"
             ],
             cta: "Upgrade to Pro",
-            popular: true
+            popular: true,
+            stripeIds: {
+                monthly: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
+                yearly: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID
+            }
         },
         {
             name: "Premium Plan",
@@ -49,7 +58,11 @@ export default function Pricing() {
                 "Custom AI training"
             ],
             cta: "Get Premium",
-            popular: false
+            popular: false,
+            stripeIds: {
+                monthly: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID,
+                yearly: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID
+            }
         }
     ]
 
@@ -57,6 +70,50 @@ export default function Pricing() {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         exit: { opacity: 0, y: -20 }
+    }
+
+    const handleSubscription = async (plan: typeof plans[0]) => {
+        try {
+            setLoading(plan.name)
+
+            if (!userId) {
+                toast({
+                    title: "Please sign in",
+                    description: "You need to be signed in to purchase a plan",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            const response = await fetch('/api/create-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    priceId: plan.stripeIds[billingInterval],
+                    userId,
+                    planName: plan.name,
+                    interval: billingInterval
+                }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok')
+            }
+
+            const { url } = await response.json()
+            window.location.href = url
+        } catch (error) {
+            console.error('Error:', error)
+            toast({
+                title: "Error",
+                description: "Something went wrong. Please try again later.",
+                variant: "destructive"
+            })
+        } finally {
+            setLoading(null)
+        }
     }
 
     return (
@@ -86,8 +143,8 @@ export default function Pricing() {
                         <button
                             onClick={() => setBillingInterval('monthly')}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${billingInterval === 'monthly'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             Monthly
@@ -95,8 +152,8 @@ export default function Pricing() {
                         <button
                             onClick={() => setBillingInterval('yearly')}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${billingInterval === 'yearly'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             Yearly
@@ -114,8 +171,8 @@ export default function Pricing() {
                             <motion.div
                                 key={plan.name}
                                 className={`relative bg-white rounded-2xl p-8 ${plan.popular
-                                        ? 'shadow-lg border-2 border-blue-600 transform hover:-translate-y-1'
-                                        : 'shadow-sm border border-gray-200 hover:border-blue-600'
+                                    ? 'shadow-lg border-2 border-blue-600 transform hover:-translate-y-1'
+                                    : 'shadow-sm border border-gray-200 hover:border-blue-600'
                                     } transition-all duration-300`}
                                 {...fadeInUp}
                                 transition={{ duration: 0.4 }}
@@ -174,11 +231,13 @@ export default function Pricing() {
                                 </div>
                                 <Button
                                     className={`w-full py-6 ${plan.popular
-                                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                            : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
                                         }`}
+                                    onClick={() => plan.stripeIds[billingInterval] && handleSubscription(plan)}
+                                    disabled={loading === plan.name}
                                 >
-                                    {plan.cta}
+                                    {loading === plan.name ? 'Processing...' : plan.cta}
                                 </Button>
                             </motion.div>
                         ))}

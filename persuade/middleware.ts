@@ -5,7 +5,7 @@ export default clerkMiddleware((auth, req) => {
     const isAuth = !!auth;
     const path = req.nextUrl.pathname;
 
-    if (!isAuth && path !== "/welcome-page") {
+    if (!isAuth && path !== "/welcome-page" && !path.match(/^\/(home|about-us|api\/user-count|api\/create-checkout-session)/)) {
         return NextResponse.redirect(new URL("/", req.url));
     }
 
@@ -16,8 +16,7 @@ export default clerkMiddleware((auth, req) => {
 
 export const config = {
     matcher: [
-        // Exclude static assets and specific public routes (update as needed)
-        '/((?!_next|home|about-us|pricing|api/user-count\\.js).*)',
-        '/(api|trpc)(.*)',
-    ],
+        "/((?!.+\\.[\\w]+$|_next).*)",
+        "/(api|trpc)(.*)"
+    ]
 };
